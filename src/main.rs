@@ -22,6 +22,14 @@ fn print_help() {
     println!("  help          Display this help message");
 }
 
+fn open_zoom_meeting(meeting_id: &str) {
+    let zoom_url = format!("zoommtg://zoom.us/join?confno={}", meeting_id);
+    Command::new("open")
+        .arg(&zoom_url)
+        .spawn()
+        .expect("Failed to open Zoom meeting");
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
@@ -54,25 +62,30 @@ fn main() {
                 println!("{}: {}", name, id);
             }
         }
-        "join" | _ if !RESERVED_NAMES.contains(&command.as_str()) => {
-            let meeting_name = if command == "join" {
-                if args.len() != 3 {
-                    eprintln!("Usage: zoom join <meeting_name>");
-                    std::process::exit(1);
-                }
-                &args[2]
-            } else {
-                command
-            };
+        "join" => {
+            if args.len() < 3 {
+                eprintln!("Usage: zoom join <meeting_name>");
+                std::process::exit(1);
+            }
 
-            if let Some(meeting_id) = meetings.meetings.get(meeting_name) {
-                let zoom_url = format!("zoommtg://zoom.us/join?confno={}", meeting_id);
-                Command::new("open")
-                    .arg(&zoom_url)
-                    .spawn()
-                    .expect("Failed to open Zoom meeting");
+            let meeting_name = &args[2];
+            let meeting_id: String = args[2..].join("").chars().filter(|c| c.is_digit(10)).collect();
+
+            if !meeting_id.is_empty() && meeting_id.chars().all(char::is_numeric) {
+                open_zoom_meeting(&meeting_id);
+            } else if let Some(meeting_id) = meetings.meetings.get(meeting_name) {
+                open_zoom_meeting(meeting_id);
             } else {
                 eprintln!("Meeting '{}' not found", meeting_name);
+                std::process::exit(1);
+            }
+        }
+        _ if command.chars().all(char::is_numeric) => {
+            let meeting_id: String = args.join("").chars().filter(|c| c.is_digit(10)).collect();
+            if !meeting_id.is_empty() && meeting_id.chars().all(char::is_numeric) {
+                open_zoom_meeting(&meeting_id);
+            } else {
+                eprintln!("Invalid meeting ID '{}'", command);
                 std::process::exit(1);
             }
         }
@@ -130,9 +143,13 @@ fn main() {
             }
         }
         _ => {
-            eprintln!("Unknown command: {}", command);
-            print_help();
-            std::process::exit(1);
+            if let Some(meeting_id) = meetings.meetings.get(command) {
+                open_zoom_meeting(meeting_id);
+            } else {
+                eprintln!("Unknown command: {}", command);
+                print_help();
+                std::process::exit(1);
+            }
         }
     }
 }

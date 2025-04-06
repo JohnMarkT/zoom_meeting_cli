@@ -66,6 +66,14 @@ This is a simple CLI application written in Rust to join Zoom meetings. It allow
     zoom standup
     ```
 
+- `join <id>`: Join the specified meeting by ID. You can also use `zoom <id>` directly to join a meeting.
+    ```sh
+    zoom join 123 456 7890
+    zoom 123 456 7890
+    zoom join 1234567890
+    zoom 1234567890
+    ```
+
 - `add <name> <id>`: Add a new meeting with the specified name and ID. The ID must contain only digits and be 9, 10, or 11 digits long after removing any non-digit characters.
     ```sh
     zoom add standup 123 456 7890
