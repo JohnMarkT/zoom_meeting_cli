@@ -2,12 +2,12 @@ use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::process::Command;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 struct Meetings {
-    meetings: HashMap<String, String>,
+    meetings: BTreeMap<String, String>,
 }
 
 const RESERVED_NAMES: &[&str] = &["add", "help", "join", "ls", "rm"];
@@ -58,8 +58,10 @@ fn main() {
 
     match command.as_str() {
         "ls" => {
+            println!("NAME\tID");
             for (name, id) in &meetings.meetings {
-                println!("{}: {}", name, id);
+                // println!("{}: {}", name, id);
+                println!("{}\t{} {} {}", name, &id[..3], &id[3..6], &id[6..id.len()]);
             }
         }
         "join" => {
